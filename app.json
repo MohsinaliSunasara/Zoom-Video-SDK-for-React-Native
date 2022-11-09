@@ -1,11 +1,3 @@
 {
-  "expo": {
-    "name": "ZoomApp",
-    "slug": "ZoomApp",
-    "version": "1.0.0",
-    "assetBundlePatterns": [
-      "**/*"
-    ]
-  },
   "name": "ZoomApp"
 }

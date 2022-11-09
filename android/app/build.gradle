@@ -141,7 +141,12 @@ android {
     ndkVersion rootProject.ext.ndkVersion
 
     compileSdkVersion rootProject.ext.compileSdkVersion
-
+    packagingOptions {
+        // TODO: workaround of the shared lib issue(https://github.com/facebook/react-native/issues/29377).
+        // We'd need to remove `app/src/main/jniLibs` along with the below line when it's resolved.
+        pickFirst '**/libc++_shared.so'
+        pickFirst '**/*.so'
+    }
     defaultConfig {
         applicationId "com.zoomapp"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -149,6 +154,7 @@ android {
         versionCode 1
         versionName "1.0"
         buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
+        multiDexEnabled true
 
         if (isNewArchitectureEnabled()) {
             // We configure the NDK build only if you decide to opt-in for the New Architecture.
@@ -339,6 +345,9 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    implementation project(':mobilertc')
+    implementation "androidx.multidex:multidex:2.0.1"
 }
 
 if (isNewArchitectureEnabled()) {

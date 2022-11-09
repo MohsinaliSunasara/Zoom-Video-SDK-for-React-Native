@@ -1,31 +1,43 @@
 package com.zoomapp;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Build;
-import android.os.Bundle;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.ReactRootView;
 
-import expo.modules.ReactActivityDelegateWrapper;
+import us.zoom.sdk.ZoomVideoSDK;
+import us.zoom.sdk.ZoomVideoSDKShareHelper;
 
 public class MainActivity extends ReactActivity {
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    // Set the theme to AppTheme BEFORE onCreate to support 
-    // coloring the background, status bar, and navigation bar.
-    // This is required for expo-splash-screen.
-    setTheme(R.style.AppTheme);
-    super.onCreate(null);
-  }
 
   /**
-   * Returns the name of the main component registered from JavaScript.
-   * This is used to schedule rendering of the component.
+   * Returns the name of the main component registered from JavaScript. This is used to schedule
+   * rendering of the component.
    */
   @Override
   protected String getMainComponentName() {
-    return "main";
+    return "ZoomApp";
+  }
+
+  /**
+   *  Users need to add below to their own project to use sharing.
+   */
+  @Override
+  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    if (requestCode == 0 && resultCode == Activity.RESULT_OK) {
+      Intent intent = new Intent(this, NotificationService.class);
+      ZoomVideoSDKShareHelper shareHelper = ZoomVideoSDK.getInstance().getShareHelper();
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        startForegroundService(intent);
+      } else {
+        startService(intent);
+      }
+      shareHelper.startShareScreen(data);
+    }
   }
 
   /**
@@ -35,36 +47,12 @@ public class MainActivity extends ReactActivity {
    */
   @Override
   protected ReactActivityDelegate createReactActivityDelegate() {
-    return new ReactActivityDelegateWrapper(this, BuildConfig.IS_NEW_ARCHITECTURE_ENABLED,
-      new MainActivityDelegate(this, getMainComponentName())
-    );
+    return new MainActivityDelegate(this, getMainComponentName());
   }
-
-  /**
-   * Align the back button behavior with Android S
-   * where moving root activities to background instead of finishing activities.
-   * @see <a href="https://developer.android.com/reference/android/app/Activity#onBackPressed()">onBackPressed</a>
-   */
-  @Override
-  public void invokeDefaultOnBackPressed() {
-    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
-      if (!moveTaskToBack(false)) {
-        // For non-root activities, use the default implementation to finish them.
-        super.invokeDefaultOnBackPressed();
-      }
-      return;
-    }
-
-    // Use the default back button implementation on Android S
-    // because it's doing more than {@link Activity#moveTaskToBack} in fact.
-    super.invokeDefaultOnBackPressed();
-  }
-
   public static class MainActivityDelegate extends ReactActivityDelegate {
     public MainActivityDelegate(ReactActivity activity, String mainComponentName) {
       super(activity, mainComponentName);
     }
-
     @Override
     protected ReactRootView createRootView() {
       ReactRootView reactRootView = new ReactRootView(getContext());
@@ -72,7 +60,6 @@ public class MainActivity extends ReactActivity {
       reactRootView.setIsFabric(BuildConfig.IS_NEW_ARCHITECTURE_ENABLED);
       return reactRootView;
     }
-
     @Override
     protected boolean isConcurrentRootEnabled() {
       // If you opted-in for the New Architecture, we enable Concurrent Root (i.e. React 18).
